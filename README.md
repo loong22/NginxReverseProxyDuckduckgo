@@ -143,7 +143,12 @@ Example (ufw):
      curl -Iv https://search.example.com
    - Check sub_filter behavior: request a known asset and confirm domains and integrity attributes are rewritten.
 
-7. Notes
+7. Browser verification
+   - Open a browser and visit the search URL with a query parameter, for example:
+     https://search.example.com/?q=1
+   - Note: The search requires the q parameter (here q=1 is the search keyword). Do not expect a search to run by visiting https://search.example.com without the query parameter.
+
+8. Notes
    - Keep certificate file paths in nginx config identical to acme.sh install paths.
    - acme.sh installs a cron job for renewals by default; ensure reload command works on renew.
    - For production, review CSP/Access-Control changes and UA blocker rules to match your policy.
