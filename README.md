@@ -1,91 +1,18 @@
 # NginxReverseProxyDuckduckgo
 Use nginx to reverse proxy the duckduckgo search engine
 
-## Overview
+The nginx configuration file is located in the sites-enabled folder. You can choose either example.com or search.example.com; one is for root domain reverse proxy, and the other is for subdomain reverse proxy. Note: For root domain reverse proxy, you can directly open `https://example.com` in your browser to search. For subdomain reverse proxy, you must access `https://search.example.com/?q=1` to search. Choose the configuration file that best suits your needs.
+
+## DNS
 This repository contains an Nginx reverse-proxy configuration that proxies DuckDuckGo search and related assets through the following hostnames:
-- search.example.com
-- external-content.example.com
-- links.example.com
-- improving.example.com
+- A search.example.com/example.com  x.x.x.x(Your IPV4 Address)
+- A external-content.example.com    x.x.x.x(Your IPV4 Address)
+- A links.example.com               x.x.x.x(Your IPV4 Address)
+- A improving.example.com           x.x.x.x(Your IPV4 Address)
 
 The proxy adapts upstream links and breaks Subresource Integrity (SRI) checks so resources load correctly under the proxied hostnames.
 
-## Prerequisites
-- A public server with a reachable IPv4/IPv6 address.
-- Nginx compiled with the following modules available:
-  - http_ssl_module
-  - http_proxy_module
-  - http_sub_module (for sub_filter)
-  - http_headers_module
-- Ports 80 and 443 reachable from the Internet (or DNS validation for certificates).
-
-## DNS
-Create DNS records for each hostname pointing to your server IP(s). Examples:
-- A     search.example.com       -> your_server_ipv4
-- AAAA  search.example.com       -> your_server_ipv6  (optional)
-Repeat for:
-- external-content.example.com
-- links.example.com
-- improving.example.com
-
-Alternatively, use CNAMEs if appropriate for your DNS setup.
-
-## SSL certificates (recommended: acme.sh / Let's Encrypt ECDSA)
-Example steps using acme.sh with standalone mode (requires port 80 free):
-
-1. Install acme.sh (if not already):
-   curl https://get.acme.sh | sh
-
-2. Issue ECDSA certificates (example for search.example.com):
-   acme.sh --issue --standalone -d search.example.com --keylength ec-256
-
-3. Install certificate to the paths used by the nginx config:
-   acme.sh --installcert -d search.example.com \
-     --ecc \
-     --key-file /root/.acme.sh/search.example.com_ecc/search.example.com.key \
-     --fullchain-file /root/.acme.sh/search.example.com_ecc/fullchain.cer \
-     --reloadcmd "systemctl reload nginx"
-
-Repeat issue/install for:
-- external-content.example.com
-- links.example.com
-- improving.example.com
-
-If port 80/443 cannot be used for HTTP validation, use DNS validation with your DNS provider's API:
-   acme.sh --issue --dns dns_provider -d example.com ...
-
-Adjust the --keylength/--ecc options per your desired key type.
-
-## Firewall
-Allow incoming traffic on:
-- TCP 80  (HTTP, needed for ACME standalone HTTP validation and redirects)
-- TCP 443 (HTTPS)
-
-Example (ufw):
-   ufw allow 80/tcp
-   ufw allow 443/tcp
-
-## Nginx notes and testing
-- The config uses sub_filter to rewrite upstream domains and to disable integrity attributes:
-  - sub_filter 'integrity=' 'no-integrity='
-  - sub_filter replaces duckduckgo.com → example.com and specific subdomains to your proxied hostnames.
-- Ensure nginx has http_sub_module (sub_filter) available.
-- Test configuration:
-   nginx -t
-- Reload after certificate install or config changes:
-   systemctl reload nginx
-
-## Security and behavior notes
-- The configuration intentionally breaks SRI (to avoid integrity mismatch) and rewrites origins/cookies to the proxied hostnames.
-- The configuration hides upstream Content-Security-Policy and X-Frame-Options headers and sets a permissive Access-Control-Allow-Origin for specific endpoints. Review these settings if you require stricter policies.
-- The user-agent check blocks common crawlers; adjust or remove as appropriate for your use case.
-
-## Troubleshooting
-- If assets fail to load, verify sub_filter types include the content MIME type and that proxy_set_header Accept-Encoding is set to allow sub_filter to operate.
-- If ACME fails in standalone mode because another process listens on port 80, either stop that process temporarily or use DNS validation.
-- Verify certificate file paths in the nginx config match the files produced by your ACME tool.
-
-## Debian 12 — Install and deploy (example)
+## Debian 12 — Install and deploy (For search.example.com)
 
 1. Update system and install Nginx
    - Update packages:
